@@ -1,0 +1,10 @@
+{
+  "name": "cli-calculator",
+  "private": true,
+  "scripts": {
+    "test": "jest --runInBand"
+  },
+  "devDependencies": {
+    "jest": "^30.5.1"
+  }
+}
