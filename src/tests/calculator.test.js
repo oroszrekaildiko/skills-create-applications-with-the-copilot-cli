@@ -1,7 +1,12 @@
 const { execFileSync } = require('node:child_process');
 const path = require('node:path');
 
-const { calculate } = require('../calculator');
+const {
+  calculate,
+  modulo,
+  power,
+  squareRoot,
+} = require('../calculator');
 
 const calculatorPath = path.join(__dirname, '..', 'calculator.js');
 
@@ -21,6 +26,20 @@ describe('calculate', () => {
 
     test('divides two numbers', () => {
       expect(calculate(20, '/', 5)).toBe(4);
+    });
+
+    test('calculates a remainder', () => {
+      expect(modulo(5, 2)).toBe(1);
+      expect(calculate(5, '%', 2)).toBe(1);
+    });
+
+    test('raises a number to a power', () => {
+      expect(power(2, 3)).toBe(8);
+      expect(calculate(2, '^', 3)).toBe(8);
+    });
+
+    test('calculates a square root', () => {
+      expect(squareRoot(16)).toBe(4);
     });
   });
 
@@ -43,6 +62,16 @@ describe('calculate', () => {
       );
     });
 
+    test('rejects modulo by zero', () => {
+      expect(() => modulo(20, 0)).toThrow('Modulo by zero is not allowed.');
+    });
+
+    test('rejects square roots of negative numbers', () => {
+      expect(() => squareRoot(-1)).toThrow(
+        'Cannot calculate the square root of a negative number.',
+      );
+    });
+
     test('rejects non-finite operands', () => {
       expect(() => calculate(Number.NaN, '+', 1)).toThrow(
         'Both operands must be valid numbers.',
@@ -52,9 +81,15 @@ describe('calculate', () => {
       );
     });
 
+    test('rejects non-finite power results', () => {
+      expect(() => power(10, 1000)).toThrow(
+        'The power result must be a finite number.',
+      );
+    });
+
     test('rejects unsupported operations', () => {
-      expect(() => calculate(2, '^', 3)).toThrow(
-        'Unsupported operation "^". Use +, -, *, or /.',
+      expect(() => calculate(2, '&', 3)).toThrow(
+        'Unsupported operation "&". Use +, -, *, /, %, or ^.',
       );
     });
   });
@@ -66,6 +101,8 @@ describe('calculator CLI', () => {
     ['10', '-', '4', '6'],
     ['45', '*', '2', '90'],
     ['20', '/', '5', '4'],
+    ['5', '%', '2', '1'],
+    ['2', '^', '3', '8'],
   ])('prints the result for %s %s %s', (left, operator, right, result) => {
     expect(execFileSync(process.execPath, [calculatorPath, left, operator, right], {
       encoding: 'utf8',
@@ -79,5 +116,20 @@ describe('calculator CLI', () => {
         stdio: 'pipe',
       }),
     ).toThrow('Division by zero is not allowed.');
+  });
+
+  test('prints the result for square root', () => {
+    expect(execFileSync(process.execPath, [calculatorPath, 'sqrt', '16'], {
+      encoding: 'utf8',
+    })).toBe('4\n');
+  });
+
+  test('exits with an error for a negative square root', () => {
+    expect(() =>
+      execFileSync(process.execPath, [calculatorPath, 'sqrt', '-1'], {
+        encoding: 'utf8',
+        stdio: 'pipe',
+      }),
+    ).toThrow('Cannot calculate the square root of a negative number.');
   });
 });
